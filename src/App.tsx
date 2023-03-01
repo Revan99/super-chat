@@ -1,34 +1,42 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { firestore } from "./firebaseConfig";
+import { useCallback, useEffect, useState } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+import { collection, doc, setDoc, getDoc } from "firebase/firestore";
+import { auth } from "./firebaseConfig";
+import SignInButton from "./components/SignInButton";
+import { onAuthStateChanged, User } from "firebase/auth";
+import SignUpButton from "./components/SignOutButton";
 
-  return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
-  )
-}
+const App = () => {
+  const citiesRef = collection(firestore, "cities");
+  const docRef = doc(citiesRef, "BJ");
+  const [user, setUser] = useState<User | null>(null);
+  // const showData = useCallback(async () => {
+  //   const docSnap = await getDoc(docRef);
+  //   console.log(auth);
+  //   if (docSnap.exists()) {
+  //     console.log("Document data:", docSnap.data());
+  //   } else {
+  //     // doc.data() will be undefined in this case
+  //     console.log("No such document!");
+  //   }
+  // }, []);
+  const getUser = useCallback(async () => {
+    console.log(auth.currentUser);
+  }, []);
 
-export default App
+  useEffect(() => {
+    // showData();
+    onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        setUser(null);
+      }
+    });
+    getUser();
+  }, [getUser]);
+  return <div>{user ? <SignUpButton /> : <SignInButton />}</div>;
+};
+
+export default App;
