@@ -1,10 +1,19 @@
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useState } from "react";
 import { auth, firestore } from "../firebaseConfig";
-import { collection, addDoc, setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, getDoc } from "firebase/firestore";
+import { useAppDispatch } from "../redux/hooks";
+import { setCurrentUser } from "../redux/feature/userSlice";
+
+type User = {
+  name: string;
+  friends: User[];
+  messages: string[];
+};
 const SignInButton = () => {
   const provider = new GoogleAuthProvider();
   const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
   return (
     <button
       onClick={async () => {
@@ -16,6 +25,11 @@ const SignInButton = () => {
             friends: [],
             messages: [],
           });
+          const docRef = doc(firestore, "users", auth.currentUser!.email!);
+          const currentUserQuerySnapshot = await getDoc(docRef);
+          if (currentUserQuerySnapshot.exists()) {
+            dispatch(setCurrentUser(currentUserQuerySnapshot.data() as User));
+          }
           setLoading(false);
         } catch (error) {
           console.error(error);

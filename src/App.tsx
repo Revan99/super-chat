@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   collection,
   doc,
-  setDoc,
   getDoc,
   getDocs,
   query,
@@ -13,14 +12,24 @@ import {
 } from "firebase/firestore";
 import { auth } from "./firebaseConfig";
 import SignInButton from "./components/SignInButton";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import ChatRoom from "./components/ChatRoom";
 import "./App.css";
+import { useAppDispatch, useAppSelector } from "./redux/hooks";
+import { setCurrentUser } from "./redux/feature/userSlice";
+
+type User = {
+  name: string;
+  friends: User[];
+  messages: string[];
+};
 
 const App = () => {
   const citiesRef = collection(firestore, "cities");
   const docRef = doc(citiesRef);
+  const currentUser = useAppSelector((state) => state.user.currentUser);
   const [user, setUser] = useState<User | null>(null);
+  const dispatch = useAppDispatch();
   const showData = useCallback(async () => {
     // const docSnap = await getDoc(docRef);
     const q = query(
@@ -46,18 +55,21 @@ const App = () => {
 
   useEffect(() => {
     showData();
-    onAuthStateChanged(auth, (currentUser) => {
+    onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        setUser(currentUser);
+        const docRef = doc(firestore, "users", currentUser!.email!);
+        const currentUserQuerySnapshot = await getDoc(docRef);
+        if (currentUserQuerySnapshot.exists()) {
+          dispatch(setCurrentUser(currentUserQuerySnapshot.data() as User));
+        }
       } else {
         setUser(null);
       }
     });
-    // getUser();
   }, [showData]);
   return (
     <div className="page-container">
-      {user ? <ChatRoom /> : <SignInButton />}
+      {currentUser ? <ChatRoom /> : <SignInButton />}
     </div>
   );
 };

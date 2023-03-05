@@ -7,7 +7,15 @@ import {
   getDocs,
   doc,
   getDoc,
+  updateDoc,
+  arrayUnion,
 } from "firebase/firestore";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import {
+  addFriend,
+  setCurrentUser,
+  setFriendToChat,
+} from "../redux/feature/userSlice";
 
 type Props = {
   value: string;
@@ -21,12 +29,14 @@ type User = {
 
 const UsersToAdd: React.FC<Props> = ({ value }) => {
   const [usersToAdd, setUsersToAdd] = useState<User[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const currentUser = useAppSelector((state) => state.user.currentUser);
+  const dispatch = useAppDispatch();
   console.log(currentUser);
-
-  const handleAdd = (user: User) => () => {
-    console.log(user);
-    console.log(currentUser);
+  const handleAdd = (user: User) => async () => {
+    await updateDoc(doc(firestore, "users", auth.currentUser?.email!), {
+      friends: arrayUnion(user),
+    });
+    dispatch(addFriend(user));
   };
   const getUsersToAdd = useCallback(async () => {
     const getUsersQuery = query(
@@ -35,11 +45,6 @@ const UsersToAdd: React.FC<Props> = ({ value }) => {
       where("name", "!=", auth.currentUser?.displayName)
     );
     const querySnapshot = await getDocs(getUsersQuery);
-    const docRef = doc(firestore, "users", auth.currentUser!.email!);
-    const currentUserQuerySnapshot = await getDoc(docRef);
-    if (currentUserQuerySnapshot.exists()) {
-      setCurrentUser(currentUserQuerySnapshot.data() as User);
-    }
     const usersArray: User[] = [];
     querySnapshot.forEach((doc) => {
       usersArray.push(doc.data() as User);
@@ -52,20 +57,23 @@ const UsersToAdd: React.FC<Props> = ({ value }) => {
   return (
     <div className="users-to-add">
       {usersToAdd.map((userToAdd) => (
-        <div className="user">
+        <div className="user" key={userToAdd.name}>
           <h3>{userToAdd.name}</h3>
           <button
-            onClick={handleAdd(userToAdd)}
-            disabled={
-              !!currentUser?.friends.find(
+            onClick={
+              currentUser?.friends.find(
                 (friend) => friend.name === userToAdd.name
               )
+                ? () => {
+                    dispatch(setFriendToChat(userToAdd));
+                  }
+                : handleAdd(userToAdd)
             }
           >
             {currentUser?.friends.find(
               (friend) => friend.name === userToAdd.name
             )
-              ? "Followed"
+              ? "Chat"
               : "Follow"}
           </button>
         </div>
