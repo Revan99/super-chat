@@ -6,16 +6,12 @@ import {
   where,
   getDocs,
   doc,
-  getDoc,
   updateDoc,
   arrayUnion,
 } from "firebase/firestore";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import {
-  addFriend,
-  setCurrentUser,
-  setFriendToChat,
-} from "../redux/feature/userSlice";
+import { addFriend, setFriendToChat } from "../redux/feature/userSlice";
+import { toggle } from "../redux/feature/contactSlice";
 
 type Props = {
   value: string;
@@ -67,6 +63,7 @@ const UsersToAdd: React.FC<Props> = ({ value }) => {
               )
                 ? () => {
                     dispatch(setFriendToChat(userToAdd));
+                    dispatch(toggle());
                   }
                 : handleAdd(userToAdd)
             }

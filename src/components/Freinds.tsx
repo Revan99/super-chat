@@ -1,5 +1,6 @@
 import { arrayRemove, doc, updateDoc } from "firebase/firestore";
 import { auth, firestore } from "../firebaseConfig";
+import { toggle } from "../redux/feature/contactSlice";
 import { setFriendToChat, unFollowFriend } from "../redux/feature/userSlice";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 
@@ -26,7 +27,10 @@ const Friends = () => {
           <div className="button-container">
             <button
               className="btn"
-              onClick={() => dispatch(setFriendToChat(userToChat))}
+              onClick={() => {
+                dispatch(setFriendToChat(userToChat));
+                dispatch(toggle());
+              }}
             >
               Chat
             </button>

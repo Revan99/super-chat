@@ -14,30 +14,27 @@ const SignInButton = () => {
   const provider = new GoogleAuthProvider();
   const [loading, setLoading] = useState(false);
   const dispatch = useAppDispatch();
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const data = await signInWithPopup(auth, provider);
+      await setDoc(doc(firestore, "users", data.user.email!), {
+        name: data.user.displayName,
+        friends: [],
+        messages: [],
+      });
+      const docRef = doc(firestore, "users", auth.currentUser!.email!);
+      const currentUserQuerySnapshot = await getDoc(docRef);
+      if (currentUserQuerySnapshot.exists()) {
+        dispatch(setCurrentUser(currentUserQuerySnapshot.data() as User));
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
-    <button
-      onClick={async () => {
-        try {
-          setLoading(true);
-          const data = await signInWithPopup(auth, provider);
-          await setDoc(doc(firestore, "users", data.user.email!), {
-            name: data.user.displayName,
-            friends: [],
-            messages: [],
-          });
-          const docRef = doc(firestore, "users", auth.currentUser!.email!);
-          const currentUserQuerySnapshot = await getDoc(docRef);
-          if (currentUserQuerySnapshot.exists()) {
-            dispatch(setCurrentUser(currentUserQuerySnapshot.data() as User));
-          }
-          setLoading(false);
-        } catch (error) {
-          console.error(error);
-        }
-      }}
-    >
-      {loading ? "loading..." : "Sign In"}
-    </button>
+    <button onClick={handleLogin}>{loading ? "loading..." : "Sign In"}</button>
   );
 };
 
