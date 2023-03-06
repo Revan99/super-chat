@@ -22,11 +22,18 @@ const Friends = () => {
     <>
       {currentUser?.friends.map((userToChat) => (
         <div className="user">
-          <h3>{userToChat.name}</h3>
-          <button onClick={() => dispatch(setFriendToChat(userToChat))}>
-            Chat
-          </button>
-          <button onClick={unFollow(userToChat)}>Un Follow</button>
+          <h4 className="friend-name">{userToChat.name}</h4>
+          <div className="button-container">
+            <button
+              className="btn"
+              onClick={() => dispatch(setFriendToChat(userToChat))}
+            >
+              Chat
+            </button>
+            <button className="btn" onClick={unFollow(userToChat)}>
+              Un Follow
+            </button>
+          </div>
         </div>
       ))}
     </>

@@ -58,8 +58,9 @@ const UsersToAdd: React.FC<Props> = ({ value }) => {
     <div className="users-to-add">
       {usersToAdd.map((userToAdd) => (
         <div className="user" key={userToAdd.name}>
-          <h3>{userToAdd.name}</h3>
+          <h4>{userToAdd.name}</h4>
           <button
+            className="btn"
             onClick={
               currentUser?.friends.find(
                 (friend) => friend.name === userToAdd.name
