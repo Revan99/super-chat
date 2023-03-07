@@ -45,16 +45,6 @@ const Content = () => {
   };
 
   const getMessages = useCallback(async () => {
-    // const getSenderMessagesQuery = query(
-    //   doc(firestore, "users", currentUser!.email!),
-    //   where("messages", "array-contains", [{ receiver: friendToChat?.name }])
-    // );
-
-    // const getReceiverMessagesQuery = query(
-    //   doc(firestore, "users", friendToChat!.email!),
-    //   where("messages", "array-contains", [{ receiver: currentUser?.name }])
-    // );
-
     onSnapshot(
       doc(firestore, "users", friendToChat!.email!),
       (querySnapshot) => {
@@ -81,10 +71,6 @@ const Content = () => {
   useEffect(() => {
     getMessages();
   }, [getMessages]);
-
-  console.log(messages);
-  console.log(senderMessages);
-  console.log(receiverMessages);
 
   return (
     <div className="chat-room-messages">
