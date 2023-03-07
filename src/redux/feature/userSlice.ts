@@ -1,10 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-type User = {
-  name: string;
-  friends: User[];
-  messages: string[];
-};
+import { User } from "../../types";
 
 export interface UserState {
   currentUser: User | null;

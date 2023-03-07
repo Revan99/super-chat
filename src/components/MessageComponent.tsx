@@ -1,11 +1,5 @@
-import { User } from "../types";
-
-type Message = {
-  content: string;
-  timestamp: string;
-  sender: User;
-  receiver: User;
-};
+import { Key } from "react";
+import { Message, User } from "../types";
 
 type Props = {
   messages: Message[];
@@ -21,7 +15,9 @@ const MessageComponent = ({ messages }: Props) => {
       }}
     >
       {messages.map((message) => (
-        <h4 style={{ color: "white" }}>{message.content}</h4>
+        <h4 key={message.timestamp} style={{ color: "white" }}>
+          {message.content}
+        </h4>
       ))}
     </div>
   );

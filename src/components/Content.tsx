@@ -1,54 +1,81 @@
 import {
-  addDoc,
-  collection,
-  getDocs,
   query,
-  serverTimestamp,
   where,
+  onSnapshot,
+  updateDoc,
+  doc,
+  arrayUnion,
 } from "@firebase/firestore";
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { firestore } from "../firebaseConfig";
 import { useAppSelector } from "../redux/hooks";
-import { User } from "../types";
+import { Message, User } from "../types";
 import MessageComponent from "./MessageComponent";
-
-type Message = {
-  content: string;
-  timestamp: string;
-  sender: User;
-  receiver: User;
-};
 
 const Content = () => {
   const currentUser = useAppSelector((state) => state.user.currentUser);
   const friendToChat = useAppSelector((state) => state.user.friendToChat);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [senderMessages, setSenderMessages] = useState<Message[]>([]);
+  const [receiverMessages, setReceiverMessages] = useState<Message[]>([]);
+  const messages = useMemo<Message[]>(
+    () =>
+      [...senderMessages, ...receiverMessages].sort(
+        (a, b) => a.timestamp - b.timestamp
+      ),
+    [senderMessages, receiverMessages]
+  );
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    await addDoc(collection(firestore, "message"), {
-      content: inputRef.current!.value,
-      sender: currentUser!.name,
-      receiver: friendToChat!.name,
-      timestamp: serverTimestamp(),
+    await updateDoc(doc(firestore, "users", currentUser!.email!), {
+      messages: arrayUnion({
+        content: inputRef.current!.value,
+        receiver: friendToChat!.name,
+        timestamp: new Date().getTime(),
+      }),
     });
   };
 
   const getMessages = useCallback(async () => {
-    const getUsersQuery = query(
-      collection(firestore, "message"),
-      where("receiver", "==", friendToChat?.name),
-      where("receiver", "==", currentUser?.name),
-      where("sender", "==", currentUser?.name),
-      where("sender", "==", friendToChat?.name)
+    // const getSenderMessagesQuery = query(
+    //   doc(firestore, "users", currentUser!.email!),
+    //   where("messages", "array-contains", [{ receiver: friendToChat?.name }])
+    // );
+
+    // const getReceiverMessagesQuery = query(
+    //   doc(firestore, "users", friendToChat!.email!),
+    //   where("messages", "array-contains", [{ receiver: currentUser?.name }])
+    // );
+
+    onSnapshot(
+      doc(firestore, "users", friendToChat!.email!),
+      (querySnapshot) => {
+        setSenderMessages(
+          (querySnapshot.data() as User)!.messages!.filter(
+            (message) => message!.receiver === currentUser!.name!
+          )
+        );
+      }
     );
-    const querySnapshot = await getDocs(getUsersQuery);
-    const messagesArray: Message[] = [];
-    querySnapshot.forEach((doc) => {
-      messagesArray.push(doc.data() as Message);
-    });
-    setMessages(messagesArray);
+
+    onSnapshot(
+      doc(firestore, "users", currentUser!.email!),
+      (querySnapshot) => {
+        setReceiverMessages(
+          (querySnapshot.data() as User)!.messages!.filter(
+            (message) => message!.receiver! === friendToChat!.name!
+          )
+        );
+      }
+    );
   }, [currentUser, friendToChat]);
 
   useEffect(() => {
@@ -56,6 +83,8 @@ const Content = () => {
   }, [getMessages]);
 
   console.log(messages);
+  console.log(senderMessages);
+  console.log(receiverMessages);
 
   return (
     <div className="chat-room-messages">

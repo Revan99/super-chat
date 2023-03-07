@@ -27,7 +27,6 @@ const UsersToAdd: React.FC<Props> = ({ value }) => {
   const [usersToAdd, setUsersToAdd] = useState<User[]>([]);
   const currentUser = useAppSelector((state) => state.user.currentUser);
   const dispatch = useAppDispatch();
-  console.log(currentUser);
   const handleAdd = (user: User) => async () => {
     await updateDoc(doc(firestore, "users", auth.currentUser?.email!), {
       friends: arrayUnion(user),

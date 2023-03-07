@@ -3,13 +3,9 @@ import { useState } from "react";
 import { auth, firestore } from "../firebaseConfig";
 import { setDoc, doc, getDoc } from "firebase/firestore";
 import { useAppDispatch } from "../redux/hooks";
+import { User } from "../types";
 import { setCurrentUser } from "../redux/feature/userSlice";
 
-type User = {
-  name: string;
-  friends: User[];
-  messages: string[];
-};
 const SignInButton = () => {
   const provider = new GoogleAuthProvider();
   const [loading, setLoading] = useState(false);
@@ -22,8 +18,9 @@ const SignInButton = () => {
         name: data.user.displayName,
         friends: [],
         messages: [],
+        email: data.user.email,
       });
-      const docRef = doc(firestore, "users", auth.currentUser!.email!);
+      const docRef = doc(firestore, "users", auth.currentUser?.email!);
       const currentUserQuerySnapshot = await getDoc(docRef);
       if (currentUserQuerySnapshot.exists()) {
         dispatch(setCurrentUser(currentUserQuerySnapshot.data() as User));
